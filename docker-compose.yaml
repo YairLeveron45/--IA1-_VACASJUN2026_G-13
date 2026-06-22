@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./API
+      dockerfile: Dockerfile
+    container_name: smart_warehouse_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./prolog:/app/prolog:ro          
+      - sw_data:/app/data               
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PROLOG_FILE=/app/prolog/warehouse.pl
+      - HISTORIAL_DB=/app/data/historial.db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode()==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - smart_warehouse_net
+
+networks:
+  smart_warehouse_net:
+    driver: bridge
+
+volumes:
+  sw_data:
