@@ -14,7 +14,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PROLOG_FILE=/app/prolog/warehouse.pl
-      - HISTORIAL_DB=/app/data/historial.db
+      - HISTORIAL_FILE=/app/data/historial.json
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode()==200 else 1)"]
       interval: 10s
@@ -29,6 +29,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     container_name: smart_warehouse_frontend
     ports:
       - "3000:80"

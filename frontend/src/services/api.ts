@@ -37,6 +37,23 @@ export interface SimulacionDTO {
   };
 }
 
+export interface RegistroHistorialDTO {
+  id: string;
+  creada_en: string;
+  finalizada_en: string | null;
+  ancho: number;
+  alto: number;
+  num_robots: number;
+  num_paquetes: number;
+  num_zonas: number;
+  num_obstaculos: number;
+  entregas: number;
+  movimientos: number;
+  pasos: number;
+  tasa_entrega: number;
+  estado_final: string;
+}
+
 interface ApiErrorBody {
   detalle?: string;
   errores?: string[];
@@ -75,6 +92,7 @@ export const api = {
   pausar: (id: string) => request<SimulacionDTO>(`/simulaciones/${id}/pausar`, { method: 'POST' }),
   reanudar: (id: string) => request<SimulacionDTO>(`/simulaciones/${id}/reanudar`, { method: 'POST' }),
   reiniciar: (id: string) => request<SimulacionDTO>(`/simulaciones/${id}/reiniciar`, { method: 'POST' }),
+  listarHistorial: () => request<RegistroHistorialDTO[]>('/historial'),
 };
 
 export const mapSimulacionToUi = (simulacion: SimulacionDTO) => {

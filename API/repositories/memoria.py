@@ -2,7 +2,7 @@
 
 Las simulaciones "vivas" no necesitan persistir en disco: se mantienen en un
 diccionario mientras la aplicación corre. Cuando una finaliza, su resumen pasa
-al HistoryRepository (SQLite), que sí persiste.
+al HistoryRepository, que si persiste.
 """
 from __future__ import annotations
 
