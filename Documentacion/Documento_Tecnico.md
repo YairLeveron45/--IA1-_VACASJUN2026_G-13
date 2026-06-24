@@ -14,24 +14,23 @@ Desarrollar un sistema inteligente capaz de simular una bodega automatizada dond
 
 ## 3. Arquitectura General
 
-El sistema esta dividido en cuatro componentes principales:
+![Diagrama de arquitectura](evidencias/Diagrama%20de%20arquitectura.png)
 
-```text
-Frontend React
-    |
-    | HTTP REST
-    v
-Backend FastAPI
-    |
-    | pyswip
-    v
-SWI-Prolog
-    |
-    v
-Reglas de decision
-```
+El sistema se despliega en una instancia AWS EC2 usando Docker Compose con dos contenedores:
 
-Adicionalmente, el backend registra el historial de simulaciones finalizadas en un archivo JSON persistente.
+- **Frontend**: aplicacion React compilada y servida con Nginx en el puerto 3000.
+- **Backend**: API FastAPI con Python que se comunica via pyswip con el motor SWI-Prolog para la toma de decisiones. Expone la API REST en el puerto 8000.
+
+El archivo `warehouse.pl` se monta como volumen de solo lectura dentro del contenedor backend. El historial de simulaciones finalizadas se persiste en `historial.json` mediante un volumen nombrado (`sw_data`). Ambos contenedores se comunican a traves de la red interna `smart_warehouse_net`.
+
+El flujo de comunicacion es el siguiente:
+
+1. El usuario accede al frontend via `http://<IP>:3000`.
+2. El frontend realiza peticiones HTTP REST al backend en `http://<IP>:8000`.
+3. El backend sincroniza el estado con Prolog y consulta la accion a ejecutar.
+4. Prolog evalua las reglas y devuelve la accion decidida.
+5. El backend aplica la accion y responde al frontend.
+6. Al finalizar la simulacion, el backend guarda el registro en `historial.json`.
 
 ## 4. Componentes
 
