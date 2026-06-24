@@ -6,7 +6,7 @@ export interface SimulationStatus {
 }
 
 export interface Robot {
-  id: number;
+  id: string;
   x: number;
   y: number;
   carrying: boolean;
@@ -28,7 +28,7 @@ export interface Obstacle {
 }
 
 export interface DeliveryZone {
-  id: number;
+  id: string;
   x: number;
   y: number;
   name: string;

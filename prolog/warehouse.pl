@@ -80,21 +80,37 @@ destino_carga(IdRobot, ZX, ZY) :-
 
 
 % ============================================================
-%  Navegación (greedy con evasión de obstáculos)
+%  Navegacion (BFS con evasion de obstaculos)
 % ============================================================
-%  Se evalúan los 4 vecinos transitables, se ordenan por la
-%  distancia resultante al objetivo y se elige el mejor. El corte
-%  (!) compromete la decisión con esa primera dirección válida.
+%  Antes se usaba una eleccion greedy: mirar solo los vecinos inmediatos y
+%  tomar el que reducia la distancia Manhattan. Eso falla cuando dos o mas
+%  obstaculos forman un bloqueo local. Esta version busca una ruta completa
+%  con BFS y devuelve la primera accion del camino mas corto encontrado.
 
 paso_hacia(RX, RY, TX, TY, Accion) :-
-    findall(NuevaD-A-NX-NY,
-            ( vecino(RX, RY, A, NX, NY),
-              celda_libre(NX, NY),
-              distancia(NX, NY, TX, TY, NuevaD) ),
-            Movimientos),
-    Movimientos \= [],
-    sort(Movimientos, [_-Accion-_-_ | _]),
+    buscar_ruta([[pos(RX, RY, inicio)]], [RX-RY], TX, TY, Ruta),
+    Ruta = [pos(RX, RY, inicio), pos(_, _, Accion) | _],
     !.
+
+buscar_ruta([[pos(TX, TY, A) | Resto] | _], _, TX, TY, Ruta) :-
+    reverse([pos(TX, TY, A) | Resto], Ruta),
+    !.
+
+buscar_ruta([Camino | Cola], Visitados, TX, TY, Ruta) :-
+    Camino = [pos(X, Y, _) | _],
+    findall([pos(NX, NY, Accion) | Camino]-(NX-NY),
+            ( vecino(X, Y, Accion, NX, NY),
+              celda_libre(NX, NY),
+              \+ memberchk(NX-NY, Visitados) ),
+            NuevosPares),
+    separar_pares(NuevosPares, NuevosCaminos, NuevosVisitados),
+    append(Cola, NuevosCaminos, NuevaCola),
+    append(Visitados, NuevosVisitados, VisitadosActualizados),
+    buscar_ruta(NuevaCola, VisitadosActualizados, TX, TY, Ruta).
+
+separar_pares([], [], []).
+separar_pares([Camino-Visitado | Resto], [Camino | Caminos], [Visitado | Visitados]) :-
+    separar_pares(Resto, Caminos, Visitados).
 
 
 % ============================================================

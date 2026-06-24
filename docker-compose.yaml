@@ -1,3 +1,5 @@
+name: smartwarehouse
+
 services:
   backend:
     build:
@@ -19,6 +21,20 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    restart: unless-stopped
+    networks:
+      - smart_warehouse_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smart_warehouse_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - smart_warehouse_net
