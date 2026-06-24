@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '../components/Header';
+import HistoryPanel from '../components/HistoryPanel';
 import LogsPanel from '../components/LogsPanel';
 import { PanelControl } from '../components/panel';
 import StatisticsPanel from '../components/StatisticsPanel';
 import { SimulationGrid } from '../components/tablero';
 import { api, mapSimulacionToUi } from '../services/api';
-import type { ConfiguracionDTO, SimulacionDTO } from '../services/api';
+import type { ConfiguracionDTO, RegistroHistorialDTO, SimulacionDTO } from '../services/api';
 import type { LogEntry } from '../types';
 
 type UiStatus = 'ready' | 'running' | 'paused' | 'finished';
@@ -86,12 +87,29 @@ const Dashboard: React.FC = () => {
   const [mode, setMode] = useState<'auto' | 'step'>('auto');
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [historial, setHistorial] = useState<RegistroHistorialDTO[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [sidePanelTab, setSidePanelTab] = useState<'logs' | 'history'>('logs');
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   const status = toUiStatus(simulacion?.ejecucion);
   const isRunning = status === 'running';
   const isPaused = status === 'paused';
+
+  const cargarHistorial = useCallback(async () => {
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const registros = await api.listarHistorial();
+      setHistorial(registros);
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : 'Error al cargar historial.');
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }, []);
 
   const uiState = useMemo(
     () => simulacion ? mapSimulacionToUi(simulacion) : mapSimulacionToUi({
@@ -134,6 +152,16 @@ const Dashboard: React.FC = () => {
   }, [crearNuevaSimulacion]);
 
   useEffect(() => {
+    void cargarHistorial();
+  }, [cargarHistorial]);
+
+  useEffect(() => {
+    if (isLogsOpen && sidePanelTab === 'history') {
+      void cargarHistorial();
+    }
+  }, [cargarHistorial, isLogsOpen, sidePanelTab]);
+
+  useEffect(() => {
     if (!isRunning) return;
     const timer = window.setInterval(() => setTimeElapsed((prev) => prev + 1), 1000);
     return () => window.clearInterval(timer);
@@ -158,6 +186,7 @@ const Dashboard: React.FC = () => {
 
       if (siguiente.ejecucion === 'finalizada') {
         addLog(setLogs, 'Simulación finalizada por el backend.', 'success');
+        void cargarHistorial();
       }
     } catch (error) {
       addLog(setLogs, error instanceof Error ? error.message : 'Error al avanzar paso.', 'error');
@@ -274,7 +303,12 @@ const Dashboard: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setIsLogsOpen((open) => !open)}
+          onClick={() => {
+            setIsLogsOpen((open) => !open);
+            if (!isLogsOpen && sidePanelTab === 'history') {
+              void cargarHistorial();
+            }
+          }}
           className="fixed top-1/2 -translate-y-1/2 right-0 z-50 bg-gradient-to-r from-black via-blue-900/80 to-blue-700/60
                      text-white p-3 rounded-l-xl border border-blue-500/20 hover:border-blue-400/40
                      transition-all duration-300 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20
@@ -299,12 +333,50 @@ const Dashboard: React.FC = () => {
           <div className="h-full px-6 pb-6 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                Historial de Inferencia
+                Historial
               </h2>
-              <span className="text-xs text-gray-400 font-mono">{logs.length} eventos</span>
+              <span className="text-xs text-gray-400 font-mono">
+                {sidePanelTab === 'logs' ? `${logs.length} eventos` : `${historial.length} simulaciones`}
+              </span>
             </div>
-            <div className="h-[calc(100%-60px)]">
-              <LogsPanel logs={logs} isSlidebar={true} />
+
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button
+                onClick={() => setSidePanelTab('logs')}
+                className={`min-h-[38px] rounded-lg text-xs font-semibold border transition-colors ${
+                  sidePanelTab === 'logs'
+                    ? 'bg-blue-600/80 text-white border-blue-300/30'
+                    : 'bg-black/30 text-gray-400 border-blue-500/10 hover:text-white'
+                }`}
+              >
+                Inferencia
+              </button>
+              <button
+                onClick={() => {
+                  setSidePanelTab('history');
+                  void cargarHistorial();
+                }}
+                className={`min-h-[38px] rounded-lg text-xs font-semibold border transition-colors ${
+                  sidePanelTab === 'history'
+                    ? 'bg-blue-600/80 text-white border-blue-300/30'
+                    : 'bg-black/30 text-gray-400 border-blue-500/10 hover:text-white'
+                }`}
+              >
+                Simulaciones
+              </button>
+            </div>
+
+            <div className="h-[calc(100%-116px)]">
+              {sidePanelTab === 'logs' ? (
+                <LogsPanel logs={logs} isSlidebar={true} />
+              ) : (
+                <HistoryPanel
+                  registros={historial}
+                  isLoading={isHistoryLoading}
+                  error={historyError}
+                  onRefresh={cargarHistorial}
+                />
+              )}
             </div>
           </div>
         </div>

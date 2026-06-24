@@ -16,21 +16,21 @@ import tempfile
 from inference.prolog_adapter import PrologAdapter
 from mundos import mundo_demo
 from repositories.memoria import SimulacionEnMemoria
-from repositories.sqlite_historial import HistorialSQLite
+from repositories.json_historial import HistorialJSON
 from services.simulation_service import SimulationService
 from services.stats_service import StatsService
 
 
 def main() -> None:
     ruta_kb = os.environ.get("PROLOG_FILE", "../prolog/warehouse.pl")
-    ruta_db = os.path.join(tempfile.gettempdir(), "historial_test.db")
-    if os.path.exists(ruta_db):
-        os.remove(ruta_db)
+    ruta_historial = os.path.join(tempfile.gettempdir(), "historial_test.json")
+    if os.path.exists(ruta_historial):
+        os.remove(ruta_historial)
 
     servicio = SimulationService(
         adapter=PrologAdapter(ruta_kb),
         sim_repo=SimulacionEnMemoria(),
-        hist_repo=HistorialSQLite(ruta_db),
+        hist_repo=HistorialJSON(ruta_historial),
         stats=StatsService(),
     )
 
@@ -56,7 +56,7 @@ def main() -> None:
     assert sim.ejecucion.value == "finalizada"
     assert m.entregas == 2
 
-    # 4) Historial persistido en SQLite
+    # 4) Historial persistido en JSON
     registros = servicio.historial()
     print(f"Registros en historial: {len(registros)} -> {registros[0].estado_final}")
     assert len(registros) == 1

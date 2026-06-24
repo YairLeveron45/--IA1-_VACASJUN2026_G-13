@@ -1,7 +1,7 @@
-"""Registro de historial de una simulación finalizada.
+"""Registro de historial de una simulacion finalizada.
 
-Es el dato que persiste el HistoryRepository (SQLite) para consulta y análisis
-posterior, y la base del dashboard de estadísticas.
+Es el dato que persiste el HistoryRepository para consulta y analisis
+posterior, y la base del dashboard de estadisticas.
 """
 from __future__ import annotations
 

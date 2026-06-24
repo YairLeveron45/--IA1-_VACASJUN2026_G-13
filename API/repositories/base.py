@@ -2,7 +2,7 @@
 
 Definen el contrato de persistencia sin atarlo a una tecnología concreta. Los
 servicios dependen de estas abstracciones, no de las implementaciones, así que
-cambiar memoria por Redis o SQLite por Postgres no toca la lógica de negocio.
+cambiar memoria por Redis o JSON por Postgres no toca la lógica de negocio.
 """
 from __future__ import annotations
 

@@ -11,7 +11,7 @@ from functools import lru_cache
 
 from inference.prolog_adapter import PrologAdapter
 from repositories.memoria import SimulacionEnMemoria
-from repositories.sqlite_historial import HistorialSQLite
+from repositories.json_historial import HistorialJSON
 from services.simulation_service import SimulationService
 from services.stats_service import StatsService
 
@@ -19,10 +19,10 @@ from services.stats_service import StatsService
 @lru_cache
 def get_service() -> SimulationService:
     ruta_kb = os.environ.get("PROLOG_FILE", "prolog/warehouse.pl")
-    ruta_db = os.environ.get("HISTORIAL_DB", "data/historial.db")
+    ruta_historial = os.environ.get("HISTORIAL_FILE", "data/historial.json")
     return SimulationService(
         adapter=PrologAdapter(ruta_kb),
         sim_repo=SimulacionEnMemoria(),
-        hist_repo=HistorialSQLite(ruta_db),
+        hist_repo=HistorialJSON(ruta_historial),
         stats=StatsService(),
     )
