@@ -3,7 +3,7 @@
 Responsabilidad ÚNICA: traducir el estado del mundo a hechos Prolog, consultar
 la regla `decidir_accion/2` y devolver la acción elegida para cada robot.
 
-⚠️ Cumple la restricción del enunciado: la DECISIÓN nace en Prolog. Este módulo
+Cumple la restricción del enunciado: la DECISIÓN nace en Prolog. Este módulo
 no contiene lógica de navegación ni de selección de rutas; solo asierta hechos y
 lee el resultado. La ejecución mecánica de la acción ya elegida la realiza
 SimulationService (Fase 2).

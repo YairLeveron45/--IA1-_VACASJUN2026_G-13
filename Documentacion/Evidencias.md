@@ -20,22 +20,9 @@ Muestra la API FastAPI disponible en `/docs`.
 
 ![Swagger API](evidencias/03-api-docs.png)
 
-## 4. Prueba de Integracion
+## 4. Prueba de git 
 
-Se ejecuto la prueba de integracion dentro del contenedor backend:
+![alt text](image.png)
 
-```powershell
-docker exec smart_warehouse_api sh -lc "cd /app && PROLOG_FILE=/app/prolog/warehouse.pl python pruebas_fase2.py"
-```
-
-Resultado:
-
-```text
-Creada simulacion ... | estado=creada
-Tras 3 pasos -> pasos=3, movimientos=3
-Final -> estado=finalizada, entregas=2/2, pasos=40, tasa=1.00
-Registros en historial: 1 -> completada
-Tras reinicio -> entregas=0, pasos=0
-Fase 2 validada: ciclo completo, historial y reinicio OK.
-```
-
+prueba de excel reparticion de funciones
+![alt text](image-1.png)
