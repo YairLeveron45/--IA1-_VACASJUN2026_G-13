@@ -29,13 +29,14 @@ _DINAMICOS: list[tuple[str, int]] = [
 
 
 class PrologAdapter:
+    """Puente Python <-> SWI-Prolog via pyswip. Traduce estado a hechos y consulta acciones."""
     def __init__(self, ruta_kb: str) -> None:
         self._prolog = Prolog()
-        self._prolog.consult(ruta_kb)
+        self._prolog.consult(ruta_kb)               # carga warehouse.pl
 
     def decidir(self, estado: EstadoSimulacion) -> dict[str, str]:
-        """Devuelve {id_robot: accion} con la acción que Prolog eligió para cada robot."""
-        self._sincronizar(estado)
+        """Sincroniza el mundo en Prolog y consulta decidir_accion/2 para cada robot."""
+        self._sincronizar(estado)                    # asierta hechos del estado actual
         acciones: dict[str, str] = {}
         for robot in estado.robots:
             resultados = list(self._prolog.query(f"decidir_accion({robot.id}, Accion)"))
@@ -44,7 +45,8 @@ class PrologAdapter:
 
     # --- interno ---
     def _sincronizar(self, estado: EstadoSimulacion) -> None:
-        # 1) Limpiar el mundo del tick anterior.
+        """Limpia hechos viejos y asierta el estado actual como hechos Prolog."""
+        # 1) Retractar hechos del tick anterior.
         for nombre, aridad in _DINAMICOS:
             comodines = ",".join(["_"] * aridad)
             list(self._prolog.query(f"retractall({nombre}({comodines}))"))

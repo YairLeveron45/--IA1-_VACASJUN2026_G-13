@@ -14,6 +14,7 @@ from services.stats_service import MetricasSimulacion
 
 
 def config_a_estado(c: schemas.ConfiguracionDTO) -> EstadoSimulacion:
+    """Convierte ConfiguracionDTO (API) a EstadoSimulacion (domain)."""
     return EstadoSimulacion(
         grid=Grid(ancho=c.ancho, alto=c.alto),
         robots=[Robot(id=r.id, x=r.x, y=r.y) for r in c.robots],
@@ -27,6 +28,7 @@ def config_a_estado(c: schemas.ConfiguracionDTO) -> EstadoSimulacion:
 
 
 def estado_a_dto(e: EstadoSimulacion) -> schemas.EstadoDTO:
+    """Convierte EstadoSimulacion (domain) a EstadoDTO (API)."""
     return schemas.EstadoDTO(
         ancho=e.grid.ancho,
         alto=e.grid.alto,
@@ -49,6 +51,7 @@ def estado_a_dto(e: EstadoSimulacion) -> schemas.EstadoDTO:
 
 
 def simulacion_a_dto(s: Simulacion) -> schemas.SimulacionDTO:
+    """Convierte Simulacion (domain) a SimulacionDTO (API)."""
     return schemas.SimulacionDTO(
         id=s.id,
         ejecucion=s.ejecucion.value,
@@ -59,6 +62,7 @@ def simulacion_a_dto(s: Simulacion) -> schemas.SimulacionDTO:
 
 
 def metricas_a_dto(m: MetricasSimulacion) -> schemas.MetricasDTO:
+    """Convierte MetricasSimulacion a MetricasDTO."""
     return schemas.MetricasDTO(
         entregas=m.entregas,
         total_paquetes=m.total_paquetes,
@@ -71,4 +75,5 @@ def metricas_a_dto(m: MetricasSimulacion) -> schemas.MetricasDTO:
 
 
 def historial_a_dto(r: RegistroHistorial) -> schemas.RegistroHistorialDTO:
+    """Convierte RegistroHistorial a RegistroHistorialDTO."""
     return schemas.RegistroHistorialDTO(**r.__dict__)

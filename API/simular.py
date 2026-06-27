@@ -17,6 +17,7 @@ from mundos import mundo_demo
 
 
 def main() -> None:
+    """Demo Fase 1: ciclo Prolog decide -> Python aplica hasta entregar todo."""
     ruta = os.environ.get("PROLOG_FILE", "../prolog/warehouse.pl")
     estado = mundo_demo()
     motor = PrologAdapter(ruta)

@@ -25,6 +25,7 @@ class MetricasSimulacion:
 
 class StatsService:
     def metricas(self, estado: EstadoSimulacion) -> MetricasSimulacion:
+        """Calcula metricas del dashboard a partir del estado actual."""
         total = len(estado.paquetes)
         entregas = sum(
             1 for p in estado.paquetes if p.estado == EstadoPaquete.ENTREGADO

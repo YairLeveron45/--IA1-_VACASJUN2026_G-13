@@ -18,11 +18,12 @@ from services.stats_service import StatsService
 
 @lru_cache
 def get_service() -> SimulationService:
+    """Crea el singleton de SimulationService con todas sus dependencias."""
     ruta_kb = os.environ.get("PROLOG_FILE", "prolog/warehouse.pl")
     ruta_historial = os.environ.get("HISTORIAL_FILE", "data/historial.json")
     return SimulationService(
-        adapter=PrologAdapter(ruta_kb),
-        sim_repo=SimulacionEnMemoria(),
-        hist_repo=HistorialJSON(ruta_historial),
+        adapter=PrologAdapter(ruta_kb),         # motor Prolog
+        sim_repo=SimulacionEnMemoria(),          # simulaciones activas en RAM
+        hist_repo=HistorialJSON(ruta_historial), # historial en JSON
         stats=StatsService(),
     )

@@ -38,9 +38,9 @@ async def ws_simulacion(
     id_sim: str,
     servicio: SimulationService = Depends(get_service),
 ):
+    """WebSocket para modo automatico en tiempo real con el frontend."""
     await websocket.accept()
 
-    # Verificar que la simulación exista antes de empezar.
     try:
         servicio.obtener(id_sim)
     except SimulacionNoEncontrada:
@@ -57,12 +57,11 @@ async def ws_simulacion(
         )
 
     async def productor():
-        """Avanza el automático y empuja cada paso mientras esté EN_EJECUCION."""
+        """Empuja el estado al frontend tras cada paso mientras este en ejecucion."""
         while not detener.is_set():
             sim = servicio.obtener(id_sim)
             if sim.ejecucion == EstadoEjecucion.EN_EJECUCION:
-                # paso() toca Prolog (bloqueante) -> a un thread para no frenar el loop.
-                sim = await asyncio.to_thread(servicio.paso, id_sim)
+                sim = await asyncio.to_thread(servicio.paso, id_sim)  # paso en thread separado
                 await enviar_estado(sim)
                 if sim.ejecucion == EstadoEjecucion.FINALIZADA:
                     await enviar_estado(sim, tipo="fin")
@@ -71,7 +70,7 @@ async def ws_simulacion(
                 await asyncio.sleep(0.05)
 
     async def receptor():
-        """Lee comandos del cliente y ajusta el estado de ejecución."""
+        """Escucha comandos del frontend (ejecutar, pausar, paso, reiniciar, cerrar)."""
         while not detener.is_set():
             msg = await websocket.receive_json()
             comando = msg.get("comando")

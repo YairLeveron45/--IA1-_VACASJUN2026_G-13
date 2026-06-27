@@ -31,17 +31,17 @@ class EstadoSimulacion:
 
     # --- Accesos por id ---
     def robot(self, id_robot: str) -> Robot:
-        return next(r for r in self.robots if r.id == id_robot)
+        return next(r for r in self.robots if r.id == id_robot)           # busca robot por id
 
     def paquete(self, id_paquete: str) -> Paquete:
-        return next(p for p in self.paquetes if p.id == id_paquete)
+        return next(p for p in self.paquetes if p.id == id_paquete)       # busca paquete por id
 
     def zona(self, id_zona: str) -> ZonaEntrega:
-        return next(z for z in self.zonas if z.id == id_zona)
+        return next(z for z in self.zonas if z.id == id_zona)             # busca zona por id
 
     # --- Consultas de conveniencia ---
     def hay_obstaculo(self, x: int, y: int) -> bool:
-        return any(o.x == x and o.y == y for o in self.obstaculos)
+        return any(o.x == x and o.y == y for o in self.obstaculos)        # True si hay obstaculo en (x,y)
 
     def todos_entregados(self) -> bool:
-        return all(p.estado == EstadoPaquete.ENTREGADO for p in self.paquetes)
+        return all(p.estado == EstadoPaquete.ENTREGADO for p in self.paquetes)  # True si todos entregados

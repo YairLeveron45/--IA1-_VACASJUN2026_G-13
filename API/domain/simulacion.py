@@ -14,7 +14,7 @@ from domain.estado import EstadoSimulacion
 
 
 def _ahora() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(timezone.utc).isoformat()       # timestamp ISO 8601 actual
 
 
 class EstadoEjecucion(str, Enum):

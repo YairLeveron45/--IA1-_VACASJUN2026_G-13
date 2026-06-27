@@ -22,6 +22,7 @@ from services.stats_service import StatsService
 
 
 def main() -> None:
+    """Prueba de integracion Fase 2: crea, paso a paso, automatico, historial y reinicio."""
     ruta_kb = os.environ.get("PROLOG_FILE", "../prolog/warehouse.pl")
     ruta_historial = os.path.join(tempfile.gettempdir(), "historial_test.json")
     if os.path.exists(ruta_historial):
@@ -34,19 +35,19 @@ def main() -> None:
         stats=StatsService(),
     )
 
-    # 1) Crear
+    # 1) Crear simulacion
     sim = servicio.crear(mundo_demo())
     print(f"Creada simulación {sim.id} | estado={sim.ejecucion.value}")
     assert sim.ejecucion.value == "creada"
 
-    # 2) Modo paso a paso
+    # 2) Modo paso a paso (3 pasos)
     for _ in range(3):
         servicio.paso(sim.id)
     m = servicio.metricas(sim.id)
     print(f"Tras 3 pasos -> pasos={m.pasos}, movimientos={m.movimientos}")
     assert m.pasos == 3
 
-    # 3) Modo automático hasta finalizar
+    # 3) Modo automatico hasta finalizar
     sim = servicio.ejecutar(sim.id)
     m = servicio.metricas(sim.id)
     print(
@@ -56,7 +57,7 @@ def main() -> None:
     assert sim.ejecucion.value == "finalizada"
     assert m.entregas == 2
 
-    # 4) Historial persistido en JSON
+    # 4) Verificar historial persistido en JSON
     registros = servicio.historial()
     print(f"Registros en historial: {len(registros)} -> {registros[0].estado_final}")
     assert len(registros) == 1

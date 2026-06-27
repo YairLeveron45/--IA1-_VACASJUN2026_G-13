@@ -16,29 +16,29 @@ class SimulationRepository(ABC):
     """Almacena las simulaciones activas (su estado vivo)."""
 
     @abstractmethod
-    def guardar(self, sim: Simulacion) -> None: ...
+    def guardar(self, sim: Simulacion) -> None: ...          # guardar/actualizar simulacion
 
     @abstractmethod
-    def obtener(self, id_sim: str) -> Simulacion | None: ...
+    def obtener(self, id_sim: str) -> Simulacion | None: ... # obtener por id
 
     @abstractmethod
-    def existe(self, id_sim: str) -> bool: ...
+    def existe(self, id_sim: str) -> bool: ...                # verificar si existe
 
     @abstractmethod
-    def listar(self) -> list[Simulacion]: ...
+    def listar(self) -> list[Simulacion]: ...                 # listar todas
 
     @abstractmethod
-    def eliminar(self, id_sim: str) -> None: ...
+    def eliminar(self, id_sim: str) -> None: ...              # eliminar por id
 
 
 class HistoryRepository(ABC):
     """Persiste los registros de simulaciones finalizadas."""
 
     @abstractmethod
-    def registrar(self, registro: RegistroHistorial) -> None: ...
+    def registrar(self, registro: RegistroHistorial) -> None: ...  # guardar nuevo registro
 
     @abstractmethod
-    def listar(self) -> list[RegistroHistorial]: ...
+    def listar(self) -> list[RegistroHistorial]: ...               # listar historial completo
 
     @abstractmethod
-    def obtener(self, id_sim: str) -> RegistroHistorial | None: ...
+    def obtener(self, id_sim: str) -> RegistroHistorial | None: ...  # buscar por id de simulacion

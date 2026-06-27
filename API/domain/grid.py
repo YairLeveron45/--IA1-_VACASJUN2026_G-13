@@ -23,4 +23,4 @@ class Grid:
     alto: int    # número de filas
 
     def dentro(self, x: int, y: int) -> bool:
-        return 0 <= x < self.ancho and 0 <= y < self.alto
+        return 0 <= x < self.ancho and 0 <= y < self.alto      # True si (x,y) esta dentro del mapa

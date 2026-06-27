@@ -12,11 +12,13 @@ router = APIRouter(prefix="/historial", tags=["historial"])
 
 @router.get("", response_model=list[schemas.RegistroHistorialDTO], summary="Listar historial")
 def listar(servicio: SimulationService = Depends(get_service)):
+    """Devuelve todo el historial de simulaciones finalizadas."""
     return [mappers.historial_a_dto(r) for r in servicio.historial()]
 
 
 @router.get("/{id_sim}", response_model=schemas.RegistroHistorialDTO, summary="Obtener un registro")
 def obtener(id_sim: str, servicio: SimulationService = Depends(get_service)):
+    """Devuelve un registro de historial por id de simulacion."""
     registro = servicio.historial_de(id_sim)
     if registro is None:
         raise HTTPException(

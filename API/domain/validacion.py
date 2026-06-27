@@ -17,6 +17,7 @@ _ID_VALIDO = re.compile(r"^[a-z][a-zA-Z0-9_]*$")
 
 
 def validar(estado: EstadoSimulacion) -> list[str]:
+    """Valida invariantes del estado. Retorna lista de errores (vacia si es valido)."""
     errores: list[str] = []
 
     # Dimensiones mínimas exigidas por el enunciado.

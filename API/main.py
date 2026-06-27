@@ -42,9 +42,11 @@ app.include_router(ws.router)
 
 @app.get("/", tags=["salud"])
 def raiz():
+    """Endpoint raiz: informacion basica del servicio."""
     return {"servicio": "smart-warehouse-backend", "estado": "ok"}
 
 
 @app.get("/health", tags=["salud"])
 def health():
+    """Health check para Docker Compose."""
     return {"status": "ok"}

@@ -12,6 +12,8 @@ from domain.errores import ConfiguracionInvalida, SimulacionNoEncontrada
 
 
 def registrar_manejadores(app: FastAPI) -> None:
+    """Registra manejadores de excepciones de dominio como errores HTTP."""
+
     @app.exception_handler(SimulacionNoEncontrada)
     async def _no_encontrada(request: Request, exc: SimulacionNoEncontrada):
         return JSONResponse(

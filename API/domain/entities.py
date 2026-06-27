@@ -14,10 +14,10 @@ from enum import Enum
 
 class Accion(str, Enum):
     """Acciones que un robot puede ejecutar (las define el enunciado)."""
-    MOVER_ARRIBA = "mover_arriba"
-    MOVER_ABAJO = "mover_abajo"
-    MOVER_IZQUIERDA = "mover_izquierda"
-    MOVER_DERECHA = "mover_derecha"
+    MOVER_ARRIBA = "mover_arriba"          # mover en Y: -1
+    MOVER_ABAJO = "mover_abajo"            # mover en Y: +1
+    MOVER_IZQUIERDA = "mover_izquierda"    # mover en X: -1
+    MOVER_DERECHA = "mover_derecha"        # mover en X: +1
     RECOGER = "recoger_paquete"
     ENTREGAR = "entregar_paquete"
     ESPERAR = "esperar"

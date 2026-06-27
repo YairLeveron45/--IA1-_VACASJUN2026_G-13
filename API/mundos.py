@@ -7,10 +7,10 @@ from domain.grid import Grid
 
 
 def mundo_demo() -> EstadoSimulacion:
-    """Mundo 10x10 con 1 robot, 2 paquetes, 2 zonas y 8 obstáculos.
+    """Mundo 10x10 de ejemplo: 1 robot, 2 paquetes, 2 zonas, 8 obstaculos.
 
-    Los obstáculos no bloquean las rutas, de modo que la navegación greedy
-    entrega ambos paquetes. Sirve para validar el flujo de punta a punta.
+    Los obstaculos estan colocados para no bloquear rutas principales.
+    Sirve para validar el flujo completo de simulacion.
     """
     return EstadoSimulacion(
         grid=Grid(ancho=10, alto=10),

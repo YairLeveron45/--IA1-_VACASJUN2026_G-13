@@ -14,13 +14,11 @@
 % ============================================================
 
 % ---- Hechos dinámicos (se reescriben en cada tick desde Python) ----
-:- dynamic dimension/2.      % dimension(Ancho, Alto)
-:- dynamic obstaculo/2.      % obstaculo(X, Y)
-:- dynamic zona_entrega/3.   % zona_entrega(IdZona, X, Y)
-:- dynamic paquete/5.        % paquete(IdPaquete, X, Y, IdZonaDestino, Estado)
-                             %   Estado: pendiente | tomado | entregado
-:- dynamic robot/4.          % robot(IdRobot, X, Y, Carga)
-                             %   Carga: libre | IdPaquete
+:- dynamic dimension/2.      % dimension(Ancho, Alto)                    -- tamano del mapa
+:- dynamic obstaculo/2.      % obstaculo(X, Y)                           -- celda bloqueada
+:- dynamic zona_entrega/3.   % zona_entrega(IdZona, X, Y)                -- punto de entrega
+:- dynamic paquete/5.        % paquete(IdPaquete, X, Y, IdZonaDestino, Estado)  -- paquete: pendiente | tomado | entregado
+:- dynamic robot/4.          % robot(IdRobot, X, Y, Carga)               -- robot con su carga (libre | IdPaquete)
 
 % Acciones posibles que puede devolver decidir_accion/2:
 %   mover_arriba, mover_abajo, mover_izquierda, mover_derecha,
@@ -32,17 +30,17 @@
 % ============================================================
 
 % Una posición está dentro de los límites del mapa.
-dentro_mapa(X, Y) :-
+dentro_mapa(X, Y) :-          % true si (X,Y) esta dentro de [0,Ancho) x [0,Alto)
     dimension(Ancho, Alto),
     X >= 0, X < Ancho,
     Y >= 0, Y < Alto.
 
-% Una celda es transitable si está dentro del mapa y no es obstáculo.
+% Una celda es transitable si esta dentro del mapa y no es obstaculo.
 celda_libre(X, Y) :-
     dentro_mapa(X, Y),
     \+ obstaculo(X, Y).
 
-% Distancia Manhattan entre dos puntos.
+% Distancia Manhattan entre dos puntos (heuristica para BFS).
 distancia(X1, Y1, X2, Y2, D) :-
     DX is abs(X1 - X2),
     DY is abs(Y1 - Y2),
@@ -59,9 +57,7 @@ vecino(X, Y, mover_arriba,    X,  NY) :- NY is Y - 1.
 %  Selección de objetivo
 % ============================================================
 
-% Paquete objetivo: el paquete PENDIENTE más cercano al robot.
-% Uso de listas: se recolectan todos los candidatos con findall y
-% se ordenan por distancia con sort.
+% Paquete objetivo: el paquete PENDIENTE mas cercano al robot.
 paquete_objetivo(IdRobot, IdPaquete, PX, PY) :-
     robot(IdRobot, RX, RY, libre),
     findall(Dist-Id-X-Y,
@@ -87,16 +83,16 @@ destino_carga(IdRobot, ZX, ZY) :-
 %  obstaculos forman un bloqueo local. Esta version busca una ruta completa
 %  con BFS y devuelve la primera accion del camino mas corto encontrado.
 
-paso_hacia(RX, RY, TX, TY, Accion) :-
+paso_hacia(RX, RY, TX, TY, Accion) :-  % devuelve la primera accion del camino BFS a (TX,TY)
     buscar_ruta([[pos(RX, RY, inicio)]], [RX-RY], TX, TY, Ruta),
     Ruta = [pos(RX, RY, inicio), pos(_, _, Accion) | _],
     !.
 
-buscar_ruta([[pos(TX, TY, A) | Resto] | _], _, TX, TY, Ruta) :-
+buscar_ruta([[pos(TX, TY, A) | Resto] | _], _, TX, TY, Ruta) :-  % caso base: llegamos al destino
     reverse([pos(TX, TY, A) | Resto], Ruta),
     !.
 
-buscar_ruta([Camino | Cola], Visitados, TX, TY, Ruta) :-
+buscar_ruta([Camino | Cola], Visitados, TX, TY, Ruta) :-         % expande vecinos libres no visitados
     Camino = [pos(X, Y, _) | _],
     findall([pos(NX, NY, Accion) | Camino]-(NX-NY),
             ( vecino(X, Y, Accion, NX, NY),
@@ -108,7 +104,7 @@ buscar_ruta([Camino | Cola], Visitados, TX, TY, Ruta) :-
     append(Visitados, NuevosVisitados, VisitadosActualizados),
     buscar_ruta(NuevaCola, VisitadosActualizados, TX, TY, Ruta).
 
-separar_pares([], [], []).
+separar_pares([], [], []).                                         % separa pares Camino-Visitado en dos listas
 separar_pares([Camino-Visitado | Resto], [Camino | Caminos], [Visitado | Visitados]) :-
     separar_pares(Resto, Caminos, Visitados).
 
@@ -119,13 +115,13 @@ separar_pares([Camino-Visitado | Resto], [Camino | Caminos], [Visitado | Visitad
 %  El orden de las cláusulas define la prioridad. Cada una termina
 %  en corte (!) para no reconsiderar acciones de menor prioridad.
 
-% 1) Estoy libre y hay un paquete pendiente en mi celda -> recogerlo.
+% 1) Prioridad mas alta: si estoy sobre un paquete pendiente, recogerlo.
 decidir_accion(IdRobot, recoger_paquete) :-
     robot(IdRobot, RX, RY, libre),
     paquete(_, RX, RY, _, pendiente),
     !.
 
-% 2) Cargo un paquete y estoy sobre su zona de entrega -> entregar.
+% 2) Si cargo un paquete y estoy sobre su zona de entrega, entregarlo.
 decidir_accion(IdRobot, entregar_paquete) :-
     robot(IdRobot, RX, RY, IdPaquete),
     IdPaquete \= libre,
@@ -133,7 +129,7 @@ decidir_accion(IdRobot, entregar_paquete) :-
     zona_entrega(IdZona, RX, RY),
     !.
 
-% 3) Cargo un paquete -> navegar hacia su zona de entrega.
+% 3) Si cargo un paquete pero no estoy en la zona, navegar hacia alla.
 decidir_accion(IdRobot, Accion) :-
     robot(IdRobot, RX, RY, IdPaquete),
     IdPaquete \= libre,
@@ -141,12 +137,12 @@ decidir_accion(IdRobot, Accion) :-
     paso_hacia(RX, RY, ZX, ZY, Accion),
     !.
 
-% 4) Estoy libre -> navegar hacia el paquete pendiente más cercano.
+% 4) Si estoy libre, navegar hacia el paquete pendiente mas cercano.
 decidir_accion(IdRobot, Accion) :-
     robot(IdRobot, RX, RY, libre),
     paquete_objetivo(IdRobot, _, PX, PY),
     paso_hacia(RX, RY, PX, PY, Accion),
     !.
 
-% 5) Nada que hacer o estoy bloqueado -> esperar.
+% 5) Si no hay nada que hacer o estoy bloqueado, esperar.
 decidir_accion(_, esperar).

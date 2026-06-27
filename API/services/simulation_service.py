@@ -36,25 +36,24 @@ class SimulationService:
         hist_repo: HistoryRepository,
         stats: StatsService | None = None,
     ) -> None:
-        self._adapter = adapter
-        self._sims = sim_repo
-        self._hist = hist_repo
+        self._adapter = adapter     # motor Prolog (decide acciones)
+        self._sims = sim_repo       # almacen de simulaciones activas
+        self._hist = hist_repo      # repositorio de historial (JSON)
         self._stats = stats or StatsService()
-        # El motor Prolog (pyswip) usa un engine global no reentrante; este lock
-        # serializa los pasos para que el WebSocket (que ejecuta en un thread)
-        # no choque con peticiones REST concurrentes.
+        # Lock para serializar acceso a Prolog (pyswip no es reentrante)
         self._lock = threading.Lock()
 
     # ---------------- creación / consulta ----------------
 
     def crear(self, estado: EstadoSimulacion) -> Simulacion:
+        """Valida y crea una nueva simulacion, la guarda en memoria."""
         errores = validar(estado)
         if errores:
             raise ConfiguracionInvalida(errores)
         sim = Simulacion(
             id=uuid.uuid4().hex[:8],
             estado=estado,
-            estado_inicial=copy.deepcopy(estado),
+            estado_inicial=copy.deepcopy(estado),  # snapshot para reiniciar
         )
         self._sims.guardar(sim)
         return sim
@@ -66,6 +65,7 @@ class SimulationService:
         return sim
 
     def listar(self) -> list[Simulacion]:
+        """Lista todas las simulaciones activas."""
         return self._sims.listar()
 
     def metricas(self, id_sim: str) -> MetricasSimulacion:
@@ -80,7 +80,7 @@ class SimulationService:
     # ---------------- control del ciclo ----------------
 
     def paso(self, id_sim: str) -> Simulacion:
-        """Ejecuta un único tick (modo paso a paso)."""
+        """Ejecuta un único tick: Prolog decide -> Python aplica."""
         with self._lock:
             sim = self.obtener(id_sim)
             if sim.ejecucion == EstadoEjecucion.FINALIZADA:
@@ -97,14 +97,13 @@ class SimulationService:
             if sim.estado.todos_entregados():
                 self._finalizar(sim, "completada")
             elif not hubo_progreso:
-                # Todos los robots esperan y aún quedan paquetes: punto muerto.
-                self._finalizar(sim, "detenida")
+                self._finalizar(sim, "detenida")  # deadlock: todos esperan
 
             self._sims.guardar(sim)
             return sim
 
     def ejecutar(self, id_sim: str, max_pasos: int = _MAX_PASOS_AUTO) -> Simulacion:
-        """Modo automático: avanza hasta finalizar, pausar o agotar el tope."""
+        """Modo automático: ejecuta pasos hasta finalizar, pausar o tope."""
         sim = self.obtener(id_sim)
         if sim.ejecucion != EstadoEjecucion.FINALIZADA:
             sim.ejecucion = EstadoEjecucion.EN_EJECUCION
@@ -120,6 +119,7 @@ class SimulationService:
         return self.obtener(id_sim)
 
     def pausar(self, id_sim: str) -> Simulacion:
+        """Pausa el modo automatico."""
         sim = self.obtener(id_sim)
         if sim.ejecucion == EstadoEjecucion.EN_EJECUCION:
             sim.ejecucion = EstadoEjecucion.PAUSADA
@@ -127,7 +127,7 @@ class SimulationService:
         return sim
 
     def reanudar(self, id_sim: str) -> Simulacion:
-        """Activa el modo automático desde 'creada' o 'pausada'."""
+        """Reanuda desde 'creada' o 'pausada' a 'en_ejecucion'."""
         sim = self.obtener(id_sim)
         if sim.ejecucion in (EstadoEjecucion.CREADA, EstadoEjecucion.PAUSADA):
             sim.ejecucion = EstadoEjecucion.EN_EJECUCION
@@ -135,7 +135,7 @@ class SimulationService:
         return sim
 
     def reiniciar(self, id_sim: str) -> Simulacion:
-        """Restaura el mundo a su configuración inicial."""
+        """Restaura la simulacion a su estado inicial."""
         sim = self.obtener(id_sim)
         sim.estado = copy.deepcopy(sim.estado_inicial)
         sim.ejecucion = EstadoEjecucion.CREADA
@@ -151,12 +151,14 @@ class SimulationService:
     # ---------------- interno ----------------
 
     def _finalizar(self, sim: Simulacion, resultado: str) -> None:
+        """Marca como finalizada y persiste el registro en el historial."""
         sim.estado.terminada = True
         sim.ejecucion = EstadoEjecucion.FINALIZADA
         sim.finalizada_en = datetime.now(timezone.utc).isoformat()
         self._hist.registrar(self._construir_registro(sim, resultado))
 
     def _construir_registro(self, sim: Simulacion, resultado: str) -> RegistroHistorial:
+        """Construye el RegistroHistorial a partir del estado final."""
         e = sim.estado
         m = self._stats.metricas(e)
         return RegistroHistorial(
